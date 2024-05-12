@@ -33,57 +33,68 @@ CHAT = os.path.join(os.path.dirname(__file__), "ai_answers.txt")
 INPUT = os.path.join(os.path.dirname(__file__), "input.mp3")
 ASSISTANT = os.path.join(os.path.dirname(__file__), "assistant.mp3")
 AI = os.path.join(os.path.dirname(__file__), "ai_answer.mp3")
-print(f"API: {API}")
-print(f"CHAT: {CHAT}")
-print(f"INPUT: {INPUT}")
-print(f"ASSISTANT: {ASSISTANT}")
-print(f"AI: {AI}")
 
-def flow():
-    try:
-        if not(os.path.exists(API)): # Удалить проверку, если используется бесплатная нейросеть
-            input("Создайте API_KEY.txt в главном каталоге и добавьте API-ключ, чтобы использовать нейросеть YandexGPT-3.\n(В противном случае используйте бесплатную нейросеть)\n")
-            exit(0)
-        if not(os.path.exists(INPUT)):
-            print("Добавьте input.mp3")
-        while not(os.path.exists(INPUT)):
-                time.sleep(0.02)
-    except KeyboardInterrupt:
-        exit(0)
+class Flow():
+    def __init__(self):
+        self.answer = ""
+        self.user = ""
+        self.assistant = ""
+        self.ai_answer = ""
     
-    answer = recognize(INPUT) # Возвращает массив [Ответ от нейросети, синтезированный текст]
-    user = answer[1]
-    assistant = answer[0]
+    def flow(self):
+        try:
+            if not(os.path.exists(API)): # Удалить проверку, если используется бесплатная нейросеть
+                input("Создайте API_KEY.txt в главном каталоге и добавьте API-ключ, чтобы использовать нейросеть YandexGPT-3.\n(В противном случае используйте бесплатную нейросеть)\n")
+                exit(0)
+            if not(os.path.exists(INPUT)):
+                print("Добавьте input.mp3")
+            while not(os.path.exists(INPUT)):
+                    time.sleep(0.02)
+        except KeyboardInterrupt:
+            exit(0)
+        
+        self.answer = recognize(INPUT) # Возвращает массив [Ответ от нейросети, синтезированный текст]
+        self.assistant = self.answer[0]
+        self.user = self.answer[1]
 
-    if answer:
-        if user != "0" and user != "-1": # Успешно
-            print(f"Распознанный текст: {user}")
-            print(f"Ассистент говорит: {assistant}")
+        if self.answer:
+            if self.user != "0" and self.user != "-1": # Успешно
+                print(f"Распознанный текст: {self.user}")
+                print(f"Ассистент говорит: {self.assistant}")
 
-            assistant_say(assistant, audio_path=ASSISTANT) # Создает файл assistant.mp3
-            ai_answer = ai_request(user, API) # Возвращает ответ нейросети
-            print_info(f"Распознанный текст:\n- {user}", f"Ассистент говорит:\n- {assistant}", answer=f"Ответ нейросети:\n- {ai_answer}")
+                assistant_say(self.assistant, audio_path=ASSISTANT) # Создает файл assistant.mp3
+                self.ai_answer = ai_request(self.user, API) # Возвращает ответ нейросети
+                # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}", answer=f"Ответ нейросети:\n- {self.ai_answer}")
+                
+                while not(self.ai_answer):
+                    time.sleep(0.02)
             
-            while not(ai_answer):
-                time.sleep(0.02)
+                with open(CHAT, "a", encoding="utf-8") as file: # Открываем файл и записываем диалог
+                    file.write(f"- {self.user}\n - {self.ai_answer}\n")
+                    file.close()
+            
+                synthesis(self.ai_answer, AI)
+                self.print_info("Цикл закончен")
+
+            elif self.user == "0":
+                assistant_say(self.assistant)
+                # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}")
+            elif self.user == "-1": # Ошибка синтеза (библиотек)
+                    ...
+
+    def print_info(self, *args, **kwargs):
+        for arg in args:
+            print(arg)
+        if 'answer' in kwargs:
+            print(kwargs['answer'])
         
-            with open(CHAT, "a", encoding="utf-8") as file: # Открываем файл и записываем диалог
-                file.write(f"- {user}\n - {ai_answer}\n")
-                file.close()
-        
-            synthesis(ai_answer, AI)
-
-        elif user == "0":
-            assistant_say(assistant)
-            print_info(f"Распознанный текст:\n- {user}", f"Ассистент говорит:\n- {assistant}")
-        elif user == "-1": # Ошибка синтеза (библиотек)
-                ...
-
-def print_info(*args, **kwargs): # 
-    for arg in args:
-        print(arg)
-    if 'answer' in kwargs:
-        print(kwargs['answer'])
-
+    def get(self):
+        return self
+# get_info().answer
+# get_info().user
+# get_info().assistant
 if __name__ == "__main__":
-    flow()
+    main = Flow()
+    main.flow()
+    
+    print(main.get().ai_answer)

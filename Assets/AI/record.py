@@ -18,26 +18,32 @@ except ImportError:
     exit()
 
 # Параметры записи звука
-CHUNK = 1024 # определяет форму ауди сигнала
+CHUNK = 1024 # определяет форму аудио сигнала
 FRT = pyaudio.paInt16 # шестнадцатибитный формат задает значение амплитуды
 CHAN = 1 # канал записи звука
 RT = 44100 # частота 
-REC_SEC = 5 #длина записи
+REC_TIME = 0 #длина записи
 OUTPUT = dir = os.path.join(os.path.dirname(__file__), "input.mp3")
 
-def record():
+def record(REC_TIME:int, recording:bool=True):
     p = pyaudio.PyAudio()
 
     stream = p.open(format=FRT, channels=CHAN, 
                     rate=RT, input = True,
                     frames_per_buffer=CHUNK)
-    print("Запись.\nГоворите...")
+    print("Говорите...")
 
     # Начало прослушивания
     frames = []
-    for i in range(0, int(RT / CHUNK * REC_SEC)):
-        data = stream.read(CHUNK)
-        frames.append(data)
+    for i in range(0, int(RT / CHUNK * REC_TIME)):
+        try:
+            if recording:
+                data = stream.read(CHUNK)
+                frames.append(data)
+            else:
+                break
+        except KeyboardInterrupt:
+            exit(0)
     print("Звуковой файл записан.")
     # Остановка прослушивания
     stream.stop_stream()
