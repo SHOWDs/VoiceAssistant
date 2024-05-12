@@ -22,7 +22,6 @@ root.resizable(False, False)
 root.iconbitmap(ico_path)
 root.title("Искусственный Интеллект")
 
-global STATUS
 STATUS = "Не активен"
 
 def run_in_background(func):
@@ -34,8 +33,10 @@ def run_in_background(func):
 def begin():
     # Отключаем кнопку
     button.configure(state="disabled")
-    global STATUS
+    
     STATUS = "Активен"
+    status_frame.configure(text=f"Статус: {STATUS}")
+    
     try:
         from AI.record import record
         from AI.ai_request import flow
@@ -44,8 +45,10 @@ def begin():
     except ImportError as e:
         print("Не могу найти модуль record.py")
     finally:
+        STATUS = "Не активен"
         # Включаем кнопку обратно
         button.configure(state="normal")
+        status_frame.configure(text=f"Статус: {STATUS}")
 
 frame = ctk.CTkFrame(master=root)
 frame.pack(pady=60, padx=60, fill="both", expand=True)
