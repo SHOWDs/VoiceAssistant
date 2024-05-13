@@ -1,4 +1,9 @@
 API_KEY.txt
+ai_answers.txt
 Micro/
 SendData/
 test/
+input.mp3
+ai_answer.mp3
+assistant.mp3
+__pycache__
