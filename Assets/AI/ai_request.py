@@ -81,6 +81,7 @@ class Flow():
                 # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}")
             elif self.user == "-1": # Ошибка синтеза (библиотек)
                     ...
+        return self
 
     def print_info(self, *args, **kwargs):
         for arg in args:
