@@ -1,12 +1,17 @@
 ## Автор кода ##
 ## Никита Шохов (dabnshowd@gmail.com) ##
+
 import sys
 import os
 import customtkinter as ctk
 import threading
+import pygame
+
+
+pygame.mixer.init() # не очищать!
 
 window_width = 600
-window_height = 500
+window_height = 300
 CHAT = ""
 STATUS = "Не активен"
 
@@ -17,94 +22,114 @@ ai_path = os.path.join(dir, "AI")
 sys.path.append(ai_path)
 assistant_path = os.path.join(ai_path, 'assistant.mp3')
 ai_answer_path = os.path.join(ai_path, 'ai_answer.mp3')
+input_path = os.path.join(ai_path, 'input.mp3')
 
 
 def show_error_message():
-    # Реализуйте ваше сообщение об ошибке здесь
     pass
+
+# Управление ресурсами: освобождаем ресурсы при закрытии окна Tkinter
+def on_closing():
+    global recording, CHAT, STATUS
+    recording = False
+    CHAT = ""
+    STATUS = ""
+    pygame.mixer.music.stop()
+    pygame.quit()
+    root.destroy()
 
 def run_in_background(func):
     def wrapper(*args, **kwargs):
         threading.Thread(target=func, args=args, kwargs=kwargs).start()
     return wrapper
 
-# Управление ресурсами: освобождаем ресурсы при закрытии окна Tkinter
-def on_closing():
-    global recording
-    recording = False
-    root.destroy()
-
-
 def create_multiline_label(parent, text, max_words_per_line=8):
-    chat_label.place(x=0, y=0)
-    words = text.split()  # Разбиваем текст на слова
-    lines = [" ".join(words[i:i+max_words_per_line]) for i in range(0, len(words), max_words_per_line)]  # Разбиваем слова на строки
     labels = []
+    words = text.split()
+    lines = [" ".join(words[i:i+max_words_per_line]) for i in range(0, len(words), max_words_per_line)]
     for line in lines:
         label = ctk.CTkLabel(master=parent, justify="center", text=line)
-        label.pack(padx=5, anchor="center")
+        label.pack(padx=5, pady=2, anchor="center")  # Используем pack() для размещения меток
         labels.append(label)
     return labels
 
-# Обновленный update_status()
+# Поменять текст, кнопку
 def update_status(**kwargs):
     global CHAT, STATUS
     CHAT = kwargs.get("CHAT", "")
     STATUS = kwargs.get("STATUS", "")
-    CHAT_labels = create_multiline_label(chat_frame, CHAT)  # Создаем многострочную метку для CHAT
-    chat_label.configure(text="")  # Очищаем основную метку, так как она будет заменена
-    chat_label.pack_forget()  # Удаляем основную метку из текущего расположения
-    for label in CHAT_labels:
-        label.pack(pady=3)  # Добавляем новые многострочные метки
+    
+    for widget in chat_frame.winfo_children():  # Очищаем все дочерние виджеты в chat_frame
+        widget.destroy()
+
+    CHAT_labels = create_multiline_label(chat_frame, CHAT)  # Создаем новые метки для CHAT
     status_label.configure(text=f"Статус: {STATUS}")
 
-# Обработка переноса текста
-def label_overflow(text):
-    max_words_per_line = 8  # Максимальное количество слов в строке
-    words = text.split()  # Разбиваем текст на слова
-    lines = [" ".join(words[i:i+max_words_per_line]) for i in range(0, len(words), max_words_per_line)]  # Разбиваем слова на строки
-    return "\n".join(lines)  # Возвращаем текст с символами новой строки для переноса на следующую строку
+# # Обработка переноса текста
+# def label_overflow(text):
+#     max_words_per_line = 8  # Максимальное количество слов в строке
+#     words = text.split()  # Разбиваем текст на слова
+#     lines = [" ".join(words[i:i+max_words_per_line]) for i in range(0, len(words), max_words_per_line)]  # Разбиваем слова на строки
+#     return "\n".join(lines)  # Возвращаем текст с символами новой строки для переноса на следующую строку
 
 def play_assistant(file):
-    import pygame
     pygame.mixer.init()
-    pygame.mixer.music.load(file)
-    pygame.mixer.music.play()
+    try:
+        if pygame.mixer.music.get_busy():
+            # Если аудио проигрывается, сразу переходим к finally
+            pygame.mixer.music.stop()
+        
+        pygame.mixer.music.load(file)
+        pygame.mixer.music.play()
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+    finally:
+        pygame.mixer.music.stop()
+        pygame.mixer.quit()
+        os.remove(file)
+
 
 @run_in_background
 def begin():
+    from AI.record import record
+    from AI.ai_request import Flow
+    
     global CHAT
     global STATUS
     global recording
     
-    STATUS = "Идет запись.."
+    recording = True
+    
+    CHAT = "...:"
+    STATUS = "Обработка"
+    
     update_status(STATUS=STATUS, CHAT=CHAT)  # Обновляем статус в основном потоке Tkinter
     
     try:
-        button.configure(fg_color="red")
-        button.configure(state="disabled")
-        from AI.record import record
-        from AI.ai_request import Flow
-        recording = True
+        button.configure(fg_color="red", state="disabled")
         record(3, recording)
-        STATUS = "Обработка"
+        recording = False
+        
         button.configure(fg_color="green")
         update_status(CHAT=CHAT, STATUS=STATUS)
+        # if os.path.exists(assistant_path): # Не реализовано - ошибки
+        #     threading.Thread(target=play_assistant, args=(assistant_path,)).start()
         flow = Flow().flow()
-        if os.path.exists(assistant_path):
-            play_assistant(assistant_path)
+
         if os.path.exists(ai_answer_path):
-            play_assistant(ai_answer_path)
+            threading.Thread(target=play_assistant, args=(ai_answer_path,)).start()
+
     except ImportError as e:
         print("Не могу найти модуль record.py")
         show_error_message()  # Показываем сообщение об ошибке
+
     finally:
         STATUS = "Не активен"
         CHAT = flow.ai_answer
         update_status(CHAT=CHAT, STATUS=STATUS)
-        button.configure(state="normal")
-        button.configure(fg_color="green")
-        
+        button.configure(state="normal", fg_color="green")
+        os.remove(input_path)
+
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
@@ -115,24 +140,25 @@ root.resizable(False, False)
 root.iconbitmap(ico_path)
 root.title("Ассистент")
 
-# История ответов нейросети
+# Рамка истории ответов
 chat_frame = ctk.CTkFrame(master=root)
-chat_frame.pack(pady=(20, 90), padx=80, fill="x", expand=True)
-chat_label = ctk.CTkLabel(master=chat_frame, justify="left", text=f"...: {CHAT}")
+chat_frame.pack(pady=(20, 0), padx=20, fill="x")
+chat_label = ctk.CTkLabel(master=chat_frame, justify="left", text=f"Нажмите на кнопку и отправьте запрос нейросети!")
 chat_label.pack(pady=30, padx=10, fill="both", anchor=ctk.CENTER)
 
 # Кнопка для отправки запроса
 button_frame = ctk.CTkFrame(master=root)
-button_frame.pack(pady=(120, 0), padx=0, fill="both", expand=True)
+button_frame.pack(pady=(20, 0), padx=20, fill="x")
 button = ctk.CTkButton(master=button_frame, text="Начать запись", command=begin,
                        fg_color="green",
                        width=120,
                        height=30,
                        hover_color="red")
-button.pack(pady=(120, 0), padx=0, anchor="n")
+button.pack(pady=(15, 0), padx=0, fill="y")
 
+# Лейбл статуса
 status_label = ctk.CTkLabel(master=button_frame, text=f"Статус: {STATUS}")
-status_label.pack(pady=0, padx=0, anchor="center")
+status_label.pack(pady=(0, 5), padx=0, fill="both")
 
 # Центрируем окно
 root.update_idletasks()

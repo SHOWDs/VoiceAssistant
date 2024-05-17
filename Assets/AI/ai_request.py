@@ -11,6 +11,7 @@
 
 import os
 import time
+import threading
 
 try:
     from speechRecognition.recognize import recognize  # Речь в текст
@@ -62,7 +63,7 @@ class Flow():
                 print(f"Распознанный текст: {self.user}")
                 print(f"Ассистент говорит: {self.assistant}")
 
-                assistant_say(self.assistant, audio_path=ASSISTANT) # Создает файл assistant.mp3
+                threading.Thread(target=self.assistant_say_async, args=(self.assistant, ASSISTANT)).start()
                 self.ai_answer = ai_request(self.user, API) # Возвращает ответ нейросети
                 # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}", answer=f"Ответ нейросети:\n- {self.ai_answer}")
                 
@@ -82,6 +83,11 @@ class Flow():
             elif self.user == "-1": # Ошибка синтеза (библиотек)
                     ...
         return self
+
+    def assistant_say_async(self, text, path):
+        # Ваш существующий код метода assistant_say здесь
+        assistant_say(text, path)  # Здесь text - это аргумент метода, переданный как позиционный
+
 
     def print_info(self, *args, **kwargs):
         for arg in args:

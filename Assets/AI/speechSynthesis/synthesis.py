@@ -1,6 +1,7 @@
 # Установка необходимых библиотек
 # pip install -r .\libs.txt
 import random
+import os
 # gtts - для перевода текст в речь.
 try:
     from gtts import gTTS
@@ -33,8 +34,9 @@ def synthesis(text, audio_path):
         assistant_say(random.choice(error_ai), R".\assistant.mp3")
         
 def assistant_say(text, audio_path=R".\assistant.mp3"):
-    print("Сохраняю mp3!")
     output = gTTS(text=text, lang="ru", slow=False)
+    if os.path.exists(audio_path):
+        os.remove(audio_path)  # Удаляем существующий файл, если он существует
     output.save(audio_path)
     
 
