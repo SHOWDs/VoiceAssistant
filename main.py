@@ -170,7 +170,7 @@ length_frame = ctk.CTkFrame(master=root)
 length_frame.pack(pady=(20, 5), padx=20, fill="both")
 
 # Лейбл выпадающего меню
-length_label = ctk.CTkLabel(master=length_frame, text="Длина ответа нейросети:")
+length_label = ctk.CTkLabel(master=length_frame, text="Длина ответа нейросети (кол-во предложений):")
 length_label.pack(pady=0, padx=20, fill="x")
 
 # Создание списка вариантов для длины ответа
