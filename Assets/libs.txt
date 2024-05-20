@@ -1,0 +1,6 @@
+SpeechRecognition
+gtts
+requests
+pyaudio
+pygame
+customtkinter

@@ -1,9 +1,6 @@
 # Установка необходимых библиотек
 # pip install -r .\libs.txt
 
-# PyAudio - для работы с аудиоустройством.
-# wave - для записи аудио в файл WAV.
-
 import os
 try:
     import pyaudio
@@ -13,9 +10,9 @@ except ImportError:
     print("pyaudio")
     print("wave")
     print("Вы можете установить их, выполнив следующие команды:")
-    print(R"pip install -r .\libs.txt")
-    input("> ")
-    exit()
+    input(R"pip install -r .\libs.txt")
+    exit(1)
+
 
 # Параметры записи звука
 CHUNK = 1024 # определяет форму аудио сигнала
@@ -59,4 +56,4 @@ def record(REC_TIME:int, recording:bool=True):
     w.close()
 
 if __name__ == "__main__":
-    record()
+    record(4, True)

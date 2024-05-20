@@ -1,5 +1,6 @@
 # Установка необходимых библиотек
 # pip install -r .\libs.txt
+
 import random
 import os
 # gtts - для перевода текст в речь.

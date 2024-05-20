@@ -34,16 +34,21 @@
 import requests
 import json
 
-def ai_request(text, ai_path):
+def ai_request(text, api_path, uri_path):
     try:
-        with open(ai_path, "r", encoding="utf-8") as file:
+        with open(api_path, "r", encoding="utf-8") as file:
             api_key = file.read()
             if len(api_key) == 0:
                 input("Вставьте API-ключ в файл API_KEY.txt, чтобы использовать бесплатную нейросеть YandexGPT-3\n")
                 exit("Невозможно получить API-ключ")
+        with open(uri_path, "r", encoding="utf-8") as file:
+            uri_key = file.read()
+            if len(uri_key) == 0:
+                input("Вставьте URI в файл URI.txt, чтобы использовать бесплатную нейросеть YandexGPT-3\n")
+                exit("Невозможно получить URI")
     except FileNotFoundError :
-        input("Файл не найден. (Добавьте файл с API-ключом, чтобы использовать бесплатную нейросеть YandexGPT-3)")
-        exit("Невозможно получить API-ключ")
+        input("Файл не найден. (Добавьте файл с API-ключом и файл с URI, чтобы использовать бесплатную нейросеть YandexGPT-3)")
+        exit("Невозможно получить API-ключ или URI.")
     
     system_text = "Ты гениальная нейросеть, рассказывающая каждый запрос пользователя в одном-двух предложениях."
     user_text = "Ответь в 1 предложении (коротко): " + text
@@ -120,5 +125,5 @@ if __name__ == "__main__":
     random_question = choice(questions)
     print(f"Случайный запрос нейросети:\n{random_question}")
     
-    answer = formatting(ai_request(random_question, delete_commas=False))
+    answer = formatting(ai_request(random_question, R".\config\API_KEY.txt", R".\config\URI.txt"), delete_commas=False)
     print(answer)

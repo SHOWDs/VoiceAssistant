@@ -4,11 +4,6 @@
 # Установка необходимых библиотек
 # pip install -r libs.txt
 
-# speech_recognition для распознавания речи
-# requests - для отправки данных через Http-форму
-# g4f <- Для бесплатной нейросети
-# pyaudio <- Для записи файла
-
 import os
 import time
 import threading
@@ -30,6 +25,7 @@ except:
 
 
 API = os.path.join(os.path.dirname(__file__), "config", "API_KEY.txt")
+URI = os.path.join(os.path.dirname(__file__), "config", "URI.txt")
 CHAT = os.path.join(os.path.dirname(__file__), "ai_answers.txt")
 INPUT = os.path.join(os.path.dirname(__file__), "input.mp3")
 ASSISTANT = os.path.join(os.path.dirname(__file__), "assistant.mp3")
@@ -44,9 +40,24 @@ class Flow():
     
     def flow(self):
         try:
-            if not(os.path.exists(API)): # Удалить проверку, если используется бесплатная нейросеть
-                input("Создайте API_KEY.txt в главном каталоге и добавьте API-ключ, чтобы использовать нейросеть YandexGPT-3.\n(В противном случае используйте бесплатную нейросеть)\n")
+            if not(os.path.exists(API)) or not(os.path.exists(URI)): # Удалить проверку, если используется бесплатная нейросеть
+                input("Создайте API_KEY.txt, URI.txt в главном каталоге и добавьте API-ключ, URI, чтобы использовать нейросеть YandexGPT-3.\n(В противном случае используйте бесплатную нейросеть)\n")
                 exit(0)
+            else:
+                try:
+                    with open(API, "r", encoding="utf-8") as api_file:
+                        api_key = api_file.read()
+                        if len(api_key) == 0:
+                            input("Вставьте API-ключ в файл API_KEY.txt, чтобы использовать бесплатную нейросеть YandexGPT-3\n")
+                            exit("Невозможно получить API-ключ")
+                    with open(URI, "r", encoding="utf-8") as uri_file:
+                        uri_key = uri_file.read()
+                        if len(uri_key) == 0:
+                            input("Вставьте URI в файл URI.txt, чтобы использовать бесплатную нейросеть YandexGPT-3\n")
+                            exit("Невозможно получить URI.")
+                except FileNotFoundError :
+                    input("Файл не найден. (Добавьте файл с API-ключом и файл с URI, чтобы использовать бесплатную нейросеть YandexGPT-3)")
+                    exit("Невозможно получить API-ключ или URI.")
             if not(os.path.exists(INPUT)):
                 print("Добавьте input.mp3")
             while not(os.path.exists(INPUT)):
@@ -64,7 +75,7 @@ class Flow():
                 print(f"Ассистент говорит: {self.assistant}")
 
                 threading.Thread(target=self.assistant_say_async, args=(self.assistant, ASSISTANT)).start()
-                self.ai_answer = ai_request(self.user, API) # Возвращает ответ нейросети
+                self.ai_answer = ai_request(self.user, API, URI) # Возвращает ответ нейросети
                 # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}", answer=f"Ответ нейросети:\n- {self.ai_answer}")
                 
                 while not(self.ai_answer):
@@ -75,10 +86,9 @@ class Flow():
                     file.close()
             
                 synthesis(self.ai_answer, AI)
-                self.print_info("Цикл закончен")
 
             elif self.user == "0":
-                assistant_say(self.assistant)
+                assistant_say(self.assistant, ASSISTANT)
                 # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}")
             elif self.user == "-1": # Ошибка синтеза (библиотек)
                     ...
@@ -104,4 +114,4 @@ if __name__ == "__main__":
     main = Flow()
     main.flow()
     
-    print(main.get().ai_answer)
+    print(main.flow().ai_answer)

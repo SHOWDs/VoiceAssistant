@@ -1,5 +1,16 @@
-import speech_recognition as sr
+# Установка необходимых библиотек
+# pip install -r .\libs.txt
+
 import random
+try:
+    import speech_recognition as sr
+except ImportError:
+    print("Для работы этой программы необходимо установить библиотеки:")
+    print("SpeechRecognition")
+    print("Вы можете установить их, выполнив следующие команды:")
+    input(R"pip install -r .\libs.txt")
+    exit(1)
+
 
 # Варианты ответов
 error_variants = ["Извините, не удалось распознать речь.", 
