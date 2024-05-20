@@ -12,7 +12,6 @@ import pygame
 
 
 pygame.mixer.init() # не очищать!
-
 # Инициализация путей
 dir = os.path.dirname(os.path.abspath(__file__))
 ico_path = os.path.join(dir, 'icon', 'icon.ico')
@@ -29,7 +28,6 @@ answer_length = 1
 # Состояние окна
 CHAT = ""
 STATUS = "Не активен"
-
 
 # При закрытии окна
 def on_closing():
@@ -86,7 +84,7 @@ def play_assistant(file):
         pygame.mixer.quit()
         os.remove(file)
 
-
+# При нажатии на кнопку.
 @run_in_background
 def begin():
     from AI.record import record
