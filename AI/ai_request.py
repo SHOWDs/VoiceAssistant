@@ -37,8 +37,9 @@ class Flow():
         self.user = ""
         self.assistant = ""
         self.ai_answer = ""
+        self.answer_length = 1
     
-    def flow(self):
+    def flow(self, answer_length):
         try:
             if not(os.path.exists(API)) or not(os.path.exists(URI)): # Удалить проверку, если используется бесплатная нейросеть
                 input("Создайте API_KEY.txt, URI.txt в главном каталоге и добавьте API-ключ, URI, чтобы использовать нейросеть YandexGPT-3.\n(В противном случае используйте бесплатную нейросеть)\n")
@@ -68,6 +69,7 @@ class Flow():
         self.answer = recognize(INPUT) # Возвращает массив [Ответ от нейросети, синтезированный текст]
         self.assistant = self.answer[0]
         self.user = self.answer[1]
+        self.answer_length = answer_length
 
         if self.answer:
             if self.user != "0" and self.user != "-1": # Успешно
@@ -75,7 +77,7 @@ class Flow():
                 print(f"Ассистент говорит: {self.assistant}")
 
                 threading.Thread(target=self.assistant_say_async, args=(self.assistant, ASSISTANT)).start()
-                self.ai_answer = ai_request(self.user, API, URI) # Возвращает ответ нейросети
+                self.ai_answer = ai_request(self.user, API, URI, self.answer_length) # Возвращает ответ нейросети
                 # self.print_info(f"Распознанный текст:\n- {self.user}", f"Ассистент говорит:\n- {self.assistant}", answer=f"Ответ нейросети:\n- {self.ai_answer}")
                 
                 while not(self.ai_answer):

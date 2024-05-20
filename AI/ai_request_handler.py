@@ -34,7 +34,7 @@
 import requests
 import json
 
-def ai_request(text, api_path, uri_path):
+def ai_request(text, api_path, uri_path, answer_length):
     try:
         with open(api_path, "r", encoding="utf-8") as file:
             api_key = file.read()
@@ -51,7 +51,7 @@ def ai_request(text, api_path, uri_path):
         exit("Невозможно получить API-ключ или URI.")
     
     system_text = "Ты гениальная нейросеть, рассказывающая каждый запрос пользователя в одном-двух предложениях."
-    user_text = "Ответь в 1 предложении (коротко): " + text
+    user_text = f"Ответь в {answer_length} предложении: " + text
     temperature = 0.0 # от 0.0 до 1.0
     
     prompt = {

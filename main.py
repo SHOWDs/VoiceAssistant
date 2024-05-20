@@ -24,7 +24,8 @@ input_path = os.path.join(ai_path, 'input.mp3')
 
 # Параметры окна
 window_width = 600
-window_height = 300
+window_height = 400
+answer_length = 1
 # Состояние окна
 CHAT = ""
 STATUS = "Не активен"
@@ -67,7 +68,7 @@ def update_status(**kwargs):
     for widget in chat_frame.winfo_children():  # Очищаем все дочерние виджеты в chat_frame
         widget.destroy()
 
-    # правильное отображение текста в окне программы (fix it)
+    # правильное отображение текста в окне программы (экспериментально)
     create_multiline_label(chat_frame, CHAT)  # Создаем новые метки для CHAT
     status_label.configure(text=f"Статус: {STATUS}")
 
@@ -113,7 +114,7 @@ def begin():
         update_status(CHAT=CHAT, STATUS=STATUS)
         # if os.path.exists(assistant_path): # Не реализовано - ошибки
         #     threading.Thread(target=play_assistant, args=(assistant_path,)).start()
-        flow = Flow().flow()
+        flow = Flow().flow(answer_length)
 
         if os.path.exists(ai_answer_path):
             threading.Thread(target=play_assistant, args=(ai_answer_path,)).start()
@@ -135,7 +136,7 @@ root = ctk.CTk()
 root.geometry(f"{window_width}x{window_height}")
 root.resizable(False, False)
 root.iconbitmap(ico_path)
-root.title("Ассистент")
+root.title("Ассистент (бета)")
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("green")
 
@@ -165,6 +166,33 @@ x = (root.winfo_screenwidth() // 2) - (width // 2)
 y = (root.winfo_screenheight() // 2) - (height // 2) - 60
 root.geometry(f"{width}x{height}+{x}+{y}")
 root.update_idletasks()
+
+# Создание рамки для текста и выпадающего меню
+length_frame = ctk.CTkFrame(master=root)
+length_frame.pack(pady=(20, 5), padx=20, fill="both")
+
+# Лейбл выпадающего меню
+length_label = ctk.CTkLabel(master=length_frame, text="Длина ответа нейросети:")
+length_label.pack(pady=0, padx=20, fill="x")
+
+# Создание списка вариантов для длины ответа
+response_lengths = ["1", "2", "3", "4", "5"]
+
+# Переменная для хранения выбранной длины ответа
+selected_length = ctk.StringVar()
+selected_length.set(response_lengths[0])  # Устанавливаем значение по умолчанию
+
+# Функция для обработки изменения выбора в меню
+def on_length_change(*args):
+    global answer_length
+    answer_length = selected_length.get()
+    print("Выбранная длина ответа:", answer_length)
+
+selected_length.trace_add("write", on_length_change)  # Добавляем обработчик изменения значения
+
+# Компонент выпадающего меню
+length_menu = ctk.CTkOptionMenu(master=length_frame, variable=selected_length, values=response_lengths)
+length_menu.pack(pady=(20, 0), padx=20, fill="y")
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
