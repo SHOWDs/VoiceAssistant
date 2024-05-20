@@ -189,8 +189,8 @@ def on_length_change(*args):
 selected_length.trace_add("write", on_length_change)  # Добавляем обработчик изменения значения
 
 # Компонент выпадающего меню
-length_menu = ctk.CTkOptionMenu(master=length_frame, variable=selected_length, values=response_lengths)
-length_menu.pack(pady=(20, 0), padx=20, fill="y")
+length_menu = ctk.CTkOptionMenu(master=length_frame, variable=selected_length, values=response_lengths, fg_color="green")
+length_menu.pack(pady=(20, 10), padx=20, fill="y")
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
